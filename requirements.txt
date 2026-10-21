@@ -1,0 +1,8 @@
+pytest>=8
+requests>=2.31
+# optional, for live SDK compatibility tests / load / evals
+cerebras_cloud_sdk
+openai
+locust
+guidellm
+lm_eval[api]

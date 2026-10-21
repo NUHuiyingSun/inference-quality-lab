@@ -1,0 +1,42 @@
+name: ci
+on: [push, pull_request]
+jobs:
+  mock-suite:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        build: [release, asan]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - run: pip install pytest requests
+      - name: Build mock server
+        run: |
+          if [ "${{ matrix.build }}" = asan ]; then make build-asan; echo "MOCK_SERVER_BIN=$PWD/mock_server/build-asan/mock_server" >> $GITHUB_ENV
+          else make build; fi
+      - run: cd api_tests && python -m pytest
+      - run: cd evals && python -m pytest tests
+      - if: failure()
+        uses: actions/upload-artifact@v4
+        with: { name: failure-reports-${{ matrix.build }}, path: api_tests/reports/failures }
+  mutation:
+    runs-on: ubuntu-latest
+    needs: mock-suite
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - run: pip install pytest requests && make mutation
+  live-smoke:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - run: pip install pytest requests cerebras_cloud_sdk openai
+      - run: cd api_tests && python -m pytest -m "not mock_only" -x
+        env:
+          IQLAB_TARGET: cerebras
+          IQLAB_API_KEY: ${{ secrets.CEREBRAS_API_KEY }}

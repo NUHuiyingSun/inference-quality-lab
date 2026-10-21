@@ -1,0 +1,11 @@
+{
+  "_comment": "Versioned eval config. Change anything here => new results directory, never overwrite.",
+  "config_version": "2026-10-v1",
+  "endpoint": {"base_url": "https://api.cerebras.ai/v1/chat/completions", "api_key_env": "IQLAB_API_KEY"},
+  "models": ["llama3.1-8b", "llama-3.3-70b"],
+  "tasks": ["gsm8k", "ifeval"],
+  "limit": 200,
+  "gen_kwargs": {"temperature": 0, "max_gen_toks": 512},
+  "num_concurrent": 4,
+  "seed": 1234
+}
